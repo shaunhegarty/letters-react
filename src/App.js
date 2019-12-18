@@ -1,5 +1,6 @@
 import React from 'react';
-import { stringContainsChars, strOfParticularLength, processResults } from './letters.js';
+import { strOfParticularLength, stringContainsChars, processResults, letterDistribution, 
+  randomLetterFromList, vowelDist, consonantDist, chooseLetterType, vowelsAllowed, consonantsAllowed } from './letters.js';
 import './App.css';
 import axios from 'axios';
 
@@ -44,79 +45,22 @@ class LettersDisplay extends React.Component {
 }
 
 class ResultsDisplay extends React.Component {
-  render() {    
+  render() {
     return (
-    <div id="results-display">
-      Best Words
+      <div id="results-display">
+        Best Words
       <div id="best-words">{this.props.results.slice(0, 30).join(', ')}</div>
-      <button id="get-best-words" onClick={(e) => this.props.getResultsHandler(e)}>Get Words</button>
-    </div>)
+        <button id="get-best-words" onClick={(e) => this.props.getResultsHandler(e)}>Get Words</button>
+      </div>)
   }
 }
 
 class ConsonantVowelSelection extends React.Component {
-  constructor(props) {
-    super(props);
-    const vowelDist = { 'A': 15, 'E': 21, 'I': 13, 'O': 13, 'U': 5, }
-    const consonantDist = {
-      'B': 2, 'C': 3, 'D': 6, 'F': 2, 'G': 3, 'H': 2, 'J': 1, 'K': 1, 'L': 5, 'M': 4, 'N': 8,
-      'P': 4, 'Q': 1, 'R': 9, 'S': 9, 'T': 9, 'V': 1, 'W': 1, 'X': 1, 'Y': 1, 'Z': 1
-    }
-    this.state = {
-      vowelList: this.letterDistribution(vowelDist),
-      consonantList: this.letterDistribution(consonantDist),
-    }
-
-    this.handleConsonantClick = this.handleConsonantClick.bind(this);
-    this.handleVowelClick = this.handleVowelClick.bind(this);
-  }
-
-  letterDistribution(distMap) {
-    let letterList = '';
-    for (let key in distMap) {
-      for (let i = 0; i < distMap[key]; i++) {
-        letterList += key
-      }
-    }
-    return letterList
-  }
-
-  randomLetterFromList(letterList) {
-    return Math.floor(Math.random() * letterList.length)
-  }
-
-  popVowel() {
-    let vowelList = this.state.vowelList.slice()
-    const index = this.randomLetterFromList(vowelList);
-    const letter = vowelList[index];
-    vowelList = vowelList.slice(0, index) + vowelList.slice(index + 1);
-    this.setState({ vowelList: vowelList });
-    return letter
-  }
-
-  popConsonant() {
-    let consonantList = this.state.consonantList.slice()
-    const index = this.randomLetterFromList(consonantList);
-    const letter = consonantList[index];
-    consonantList = consonantList.slice(0, index) + consonantList.slice(index + 1);
-    this.setState({ consonantList: consonantList });
-    return letter
-  }
-
-  handleConsonantClick() {
-    const letter = this.popConsonant();
-    this.props.clickHandler(letter);
-  }
-
-  handleVowelClick() {
-    const letter = this.popVowel();
-    this.props.clickHandler(letter);
-  }
-
   render() {
     return (<div className="consonant-vowel-selection">
-      <button onClick={this.handleConsonantClick}>Consonant</button>
-      <button onClick={this.handleVowelClick}>Vowel</button>
+      <button name="consonant" onClick={this.props.consonantHandler}>Consonant ({this.props.consonantList.length} left)</button>
+      <button name="vowel" onClick={this.props.vowelHandler}>Vowel ({this.props.vowelList.length} left)</button>
+      <button onClick={this.props.autoHandler}>Auto</button>
     </div>);
   }
 }
@@ -129,14 +73,14 @@ class WordEntry extends React.Component {
 
   handleSave(e) {
     const wordToSave = this.state.word;
-    if (wordToSave.length > 0){
-      this.props.saveHandler(wordToSave);    
+    if (wordToSave.length > 0) {
+      this.props.saveHandler(wordToSave);
       document.getElementById('word-entry').value = "";
     }
   }
 
   onChange(e) {
-    this.setState({word: e.target.value.toUpperCase()})
+    this.setState({ word: e.target.value.toUpperCase() })
   }
 
   render() {
@@ -169,20 +113,30 @@ class LettersGame extends React.Component {
     super(props);
     this.state = {
       mix: '',
-      gameSize: 9,
+      gameSize: 10,
       savedWords: new Set(),
       results: [],
+      vowelList: letterDistribution(vowelDist),
+      consonantList: letterDistribution(consonantDist),
+      vowelCount: 0,
+      consonantCount: 0,
     };
 
     // This will not work inside the function when it is passed, if this is not bound
-    this.handleNewLetter = this.handleNewLetter.bind(this);
-    this.handleClear = this.handleClear.bind(this);
     this.handleSaveWord = this.handleSaveWord.bind(this);
   };
 
   handleNewLetter(newLetter) {
-    const currentMix = this.state.mix;
-    this.setState({ mix: currentMix + newLetter })
+    if (this.state.mix.length < this.state.gameSize) {
+      const currentMix = this.state.mix;
+      this.setState({ mix: currentMix + newLetter })
+    }
+  }
+
+  handleNewMix(newMix) {
+    if (newMix.length <= this.state.gameSize) {
+      this.setState({ mix: newMix });
+    }
   }
 
   handleSaveWord(newWord) {
@@ -192,29 +146,121 @@ class LettersGame extends React.Component {
   }
 
   handleClear() {
-    this.setState({ mix: '', savedWords: [], results: [] });
+    this.setState({
+      mix: '',
+      savedWords: [],
+      results: [],
+      vowelCount: 0,
+      consonantCount: 0,
+    });
   }
 
   handleGetResults = async event => {
     event.preventDefault();
     let subAnagrams;
-    if(this.state.mix.length) {
+    if (this.state.mix.length) {
       const response = await axios.get('http://api.shaunhegarty.com/subanagrams/' + this.state.mix);
       subAnagrams = processResults(response.data);
     } else {
       subAnagrams = [];
     }
-    this.setState({results: subAnagrams});
+    this.setState({ results: subAnagrams });
   };
+
+  popVowel() {
+    let vowelList = this.state.vowelList.slice()
+    const index = randomLetterFromList(vowelList);
+    const letter = vowelList[index];
+    vowelList = vowelList.slice(0, index) + vowelList.slice(index + 1);
+    this.setState({ vowelList: vowelList });
+    console.log('retrieving vowel | ' + letter + ' | ' + vowelList + ' | pile: ' + vowelList.length);
+    return letter
+  }
+
+  popConsonant() {
+    let consonantList = this.state.consonantList.slice()
+    const index = randomLetterFromList(consonantList);
+    const letter = consonantList[index];
+    consonantList = consonantList.slice(0, index) + consonantList.slice(index + 1);
+    this.setState({ consonantList: consonantList });
+    console.log('retrieving consonant | ' + letter + ' | ' + consonantList);
+    return letter
+  }
+
+  handleConsonantClick() {
+    const consonantCount = this.state.consonantCount;
+    if (consonantsAllowed(consonantCount, this.state.gameSize) && this.state.mix.length < this.state.gameSize) {
+      const letter = this.popConsonant();
+      this.setState({ consonantCount: consonantCount + 1 })
+      this.handleNewLetter(letter);
+    }
+  }
+
+  handleVowelClick() {
+    const vowelCount = this.state.vowelCount;
+    if (vowelsAllowed(vowelCount, this.state.gameSize) && this.state.mix.length < this.state.gameSize) {
+      const letter = this.popVowel();
+      this.setState({ vowelCount: vowelCount + 1 })
+      this.handleNewLetter(letter);
+    }
+  }
+
+  letterMaintainer() {
+    if (this.state.vowelList.length < this.state.gameSize) {
+      letterDistribution(vowelDist)
+    }
+  }
+
+  handleAutoClick() {
+    let mix = this.state.mix;
+    let vowelList = this.state.vowelList.slice()
+    let consonantList = this.state.consonantList.slice();
+    let vowelCount = this.state.vowelCount;
+    let consonantCount = this.state.consonantCount;
+    for (let i = mix.length; i < this.state.gameSize; i++) {
+      let letterList;
+      const bUseConsonant = this.chooseLetterType(vowelCount, consonantCount, this.state.gameSize);
+      if (bUseConsonant) {
+        letterList = consonantList;
+      } else {
+        letterList = vowelList;
+      }
+      const index = randomLetterFromList(letterList);
+      const letter = letterList[index];
+      mix += letter;
+      letterList = letterList.slice(0, index) + letterList.slice(index + 1);
+      if (bUseConsonant) {
+        consonantList = letterList
+        consonantCount++;
+      } else {
+        vowelList = letterList
+        vowelCount++;
+      }
+    }
+    this.setState({
+      consonantList: consonantList,
+      vowelList: vowelList,
+      consonantCount: consonantCount,
+      vowelCount: vowelCount,
+    })
+    this.handleNewMix(mix);
+  }
 
   render() {
     return (<div className="letters-game">
-      <RoundController clearHandler={this.handleClear} />
+      <RoundController clearHandler={(e) => this.handleClear(e)} />
       <LettersDisplay letters={this.state.mix} size={this.state.gameSize} />
-      <ConsonantVowelSelection clickHandler={this.handleNewLetter} />
-      <WordEntry saveHandler={this.handleSaveWord} maxLength={this.state.gameSize} mix={this.state.mix} />
+      <ConsonantVowelSelection
+        vowelHandler={(e) => this.handleVowelClick(e)}
+        consonantHandler={(e) => this.handleConsonantClick(e)}
+        autoHandler={(e) => this.handleAutoClick(e)}
+        vowelList={this.state.vowelList}
+        consonantList={this.state.consonantList}
+        mix={this.state.mix}
+        gameSize={this.state.gameSize} />
+      <WordEntry saveHandler={(e) => this.handleSaveWord(e)} maxLength={this.state.gameSize} mix={this.state.mix} />
       <SavedWords savedWords={this.state.savedWords} />
-      <ResultsDisplay results={this.state.results} getResultsHandler={(e) => this.handleGetResults(e)}/>
+      <ResultsDisplay results={this.state.results} getResultsHandler={(e) => this.handleGetResults(e)} />
     </div>
     )
   }
