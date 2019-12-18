@@ -44,26 +44,12 @@ class LettersDisplay extends React.Component {
 }
 
 class ResultsDisplay extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {results: []};
-  }
-
-  handleGetResults = async event => {
-    event.preventDefault();
-    const response = await axios.get('http://api.shaunhegarty.com/subanagrams/' + this.props.mix);
-    const subAnagrams = processResults(response.data);
-    console.log(subAnagrams);
-    this.setState({results: subAnagrams});
-  };
-
-  render() {
-    console.log(this.state.results);
+  render() {    
     return (
     <div id="results-display">
       Best Words
-      <div id="best-words">{this.state.results.slice(0, 30).join(', ')}</div>
-      <button id="get-best-words" onClick={(e) => this.handleGetResults(e)}>Get Words</button>
+      <div id="best-words">{this.props.results.slice(0, 30).join(', ')}</div>
+      <button id="get-best-words" onClick={(e) => this.props.getResultsHandler(e)}>Get Words</button>
     </div>)
   }
 }
@@ -156,7 +142,7 @@ class WordEntry extends React.Component {
   render() {
     const disabled = this.state.word.length === 0 || !stringContainsChars(this.props.mix, this.state.word);
     return (<div id="word-entry-div">
-      <input type="text" id="word-entry" maxLength={this.props.maxlen} onChange={(e) => this.onChange(e)} />
+      <input type="text" id="word-entry" maxLength={this.props.maxLength} onChange={(e) => this.onChange(e)} />
       <button id="save-word" onClick={(e) => this.handleSave(e)} disabled={disabled}>Save Word</button>
     </div>)
   }
@@ -185,6 +171,7 @@ class LettersGame extends React.Component {
       mix: '',
       gameSize: 9,
       savedWords: new Set(),
+      results: [],
     };
 
     // This will not work inside the function when it is passed, if this is not bound
@@ -205,17 +192,29 @@ class LettersGame extends React.Component {
   }
 
   handleClear() {
-    this.setState({ mix: '', savedWords: [] });
+    this.setState({ mix: '', savedWords: [], results: [] });
   }
+
+  handleGetResults = async event => {
+    event.preventDefault();
+    let subAnagrams;
+    if(this.state.mix.length) {
+      const response = await axios.get('http://api.shaunhegarty.com/subanagrams/' + this.state.mix);
+      subAnagrams = processResults(response.data);
+    } else {
+      subAnagrams = [];
+    }
+    this.setState({results: subAnagrams});
+  };
 
   render() {
     return (<div className="letters-game">
       <RoundController clearHandler={this.handleClear} />
       <LettersDisplay letters={this.state.mix} size={this.state.gameSize} />
       <ConsonantVowelSelection clickHandler={this.handleNewLetter} />
-      <WordEntry saveHandler={this.handleSaveWord} maxlen={this.state.gameSize} mix={this.state.mix} />
+      <WordEntry saveHandler={this.handleSaveWord} maxLength={this.state.gameSize} mix={this.state.mix} />
       <SavedWords savedWords={this.state.savedWords} />
-      <ResultsDisplay mix={this.state.mix}/>
+      <ResultsDisplay results={this.state.results} getResultsHandler={(e) => this.handleGetResults(e)}/>
     </div>
     )
   }
