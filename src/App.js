@@ -1,5 +1,7 @@
 import React from 'react';
+import { stringContainsChars, strOfParticularLength, processResults } from './letters.js';
 import './App.css';
+import axios from 'axios';
 
 class Letter extends React.Component {
   render() {
@@ -7,27 +9,14 @@ class Letter extends React.Component {
   }
 }
 
-function strOfParticularLength(string, length) {
-  if (string.length === length) {
-    return string;
-  } else if (string.length > length) {
-    return string.slice(0, length);
-  } else {
-    while (string.length < 9) {
-      string += " ";
-    }
-    return string;
-  }
-}
-
 class GameTimer extends React.Component {
-  render () {
+  render() {
     return (<div id="game-timer">Game Timer</div>)
   }
 }
 
 class RoundController extends React.Component {
-  render () {
+  render() {
     return (<div id="round-controller">
       <GameTimer />
       <button id="round-begin">Begin Round</button>
@@ -38,7 +27,7 @@ class RoundController extends React.Component {
 
 class LettersDisplay extends React.Component {
   render() {
-    const mix = strOfParticularLength(this.props.letters, this.props.gameSize);
+    const mix = strOfParticularLength(this.props.letters, this.props.size);
     const lettersArray = mix.toUpperCase().split('');
     const letters = lettersArray.map(function (character, index) {
       return (<Letter key={index} letter={character} />);
@@ -51,6 +40,31 @@ class LettersDisplay extends React.Component {
           </tr>
         </tbody>
       </table>)
+  }
+}
+
+class ResultsDisplay extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {results: []};
+  }
+
+  handleGetResults = async event => {
+    event.preventDefault();
+    const response = await axios.get('http://api.shaunhegarty.com/subanagrams/' + this.props.mix);
+    const subAnagrams = processResults(response.data);
+    console.log(subAnagrams);
+    this.setState({results: subAnagrams});
+  };
+
+  render() {
+    console.log(this.state.results);
+    return (
+    <div id="results-display">
+      Best Words
+      <div id="best-words">{this.state.results.slice(0, 30).join(', ')}</div>
+      <button id="get-best-words" onClick={(e) => this.handleGetResults(e)}>Get Words</button>
+    </div>)
   }
 }
 
@@ -124,27 +138,34 @@ class ConsonantVowelSelection extends React.Component {
 class WordEntry extends React.Component {
   constructor(props) {
     super(props);
-    this.handleSave = this.handleSave.bind(this);
+    this.state = { word: '' };
   };
 
-  handleSave() {
-    console.log('Attempting to save word')
-    const input = document.getElementById('word-entry')
-    this.props.saveHandler(input.value);
-    input.value = "";
+  handleSave(e) {
+    const wordToSave = this.state.word;
+    if (wordToSave.length > 0){
+      this.props.saveHandler(wordToSave);    
+      document.getElementById('word-entry').value = "";
+    }
+  }
+
+  onChange(e) {
+    this.setState({word: e.target.value.toUpperCase()})
   }
 
   render() {
+    const disabled = this.state.word.length === 0 || !stringContainsChars(this.props.mix, this.state.word);
     return (<div id="word-entry-div">
-      <input type="text" id="word-entry" maxlength={this.props.maxlen}/>
-      <button id="save-word" onClick={this.handleSave}>Save Word</button>
+      <input type="text" id="word-entry" maxLength={this.props.maxlen} onChange={(e) => this.onChange(e)} />
+      <button id="save-word" onClick={(e) => this.handleSave(e)} disabled={disabled}>Save Word</button>
     </div>)
   }
 }
 
 class SavedWords extends React.Component {
   render() {
-    const savedWords = this.props.savedWords.map(function(word){
+    const savedWordsArray = [...this.props.savedWords];
+    const savedWords = savedWordsArray.map(function (word) {
       return <td key={word}>{word}</td>
     });
     return (<table id="saved-word-table">
@@ -160,9 +181,11 @@ class SavedWords extends React.Component {
 class LettersGame extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { mix: '', 
-    gameSize: 9,
-    savedWords: [] };
+    this.state = {
+      mix: '',
+      gameSize: 9,
+      savedWords: new Set(),
+    };
 
     // This will not work inside the function when it is passed, if this is not bound
     this.handleNewLetter = this.handleNewLetter.bind(this);
@@ -176,15 +199,13 @@ class LettersGame extends React.Component {
   }
 
   handleSaveWord(newWord) {
-    let savedWords = this.state.savedWords.slice()
-    savedWords = savedWords.concat(newWord);
-    console.log('Trying to add ' + newWord)
-    this.setState({savedWords: savedWords})
-    console.log(this.state)
+    let savedWords = new Set(this.state.savedWords);
+    savedWords = savedWords.add(newWord);
+    this.setState({ savedWords: savedWords })
   }
 
   handleClear() {
-    this.setState({ mix: '', savedWords: []});
+    this.setState({ mix: '', savedWords: [] });
   }
 
   render() {
@@ -192,8 +213,9 @@ class LettersGame extends React.Component {
       <RoundController clearHandler={this.handleClear} />
       <LettersDisplay letters={this.state.mix} size={this.state.gameSize} />
       <ConsonantVowelSelection clickHandler={this.handleNewLetter} />
-      <WordEntry saveHandler={this.handleSaveWord} maxlen={this.state.gameSize}/>
-      <SavedWords savedWords={this.state.savedWords}/>
+      <WordEntry saveHandler={this.handleSaveWord} maxlen={this.state.gameSize} mix={this.state.mix} />
+      <SavedWords savedWords={this.state.savedWords} />
+      <ResultsDisplay mix={this.state.mix}/>
     </div>
     )
   }
