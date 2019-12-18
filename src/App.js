@@ -219,7 +219,7 @@ class LettersGame extends React.Component {
     let consonantCount = this.state.consonantCount;
     for (let i = mix.length; i < this.state.gameSize; i++) {
       let letterList;
-      const bUseConsonant = this.chooseLetterType(vowelCount, consonantCount, this.state.gameSize);
+      const bUseConsonant = chooseLetterType(vowelCount, consonantCount, this.state.gameSize);
       if (bUseConsonant) {
         letterList = consonantList;
       } else {

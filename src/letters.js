@@ -81,6 +81,6 @@ export function consonantsAllowed(consonantCount, gameSize) {
     return lettersAllowed(cSplit, consonantCount, gameSize)
 }
 
-function lettersAllowed(split, letterCount, gameSize) {
+export function lettersAllowed(split, letterCount, gameSize) {
     return letterCount < letterLimit(split, gameSize);
 }
