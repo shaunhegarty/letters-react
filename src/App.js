@@ -61,7 +61,7 @@ class ConsonantVowelSelection extends React.Component {
 class WordEntry extends React.Component {
   keyPressed(e) {
     if (e.key === "Enter") {
-      this.handleSave();
+      this.props.saveHandler(e);
     }
   }
 
