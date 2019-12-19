@@ -178,12 +178,16 @@ class LettersGame extends React.Component {
   }
 
   handleClear() {
+    const vowelList = this.state.vowelList.length < this.state.gameSize ? letterDistribution(vowelDist) : this.state.vowelList
+    const consonantList = this.state.consonantList.length < this.state.gameSize ? letterDistribution(consonantDist) : this.state.consonantList
     this.setState({
       mix: '',
       savedWords: [],
       results: [],
       vowelCount: 0,
       consonantCount: 0,
+      vowelList: vowelList,
+      consonantList: consonantList,
     });
   }
 
@@ -232,12 +236,6 @@ class LettersGame extends React.Component {
       const letter = this.popVowel();
       this.setState({ vowelCount: vowelCount + 1 })
       this.handleNewLetter(letter);
-    }
-  }
-
-  letterMaintainer() {
-    if (this.state.vowelList.length < this.state.gameSize) {
-      letterDistribution(vowelDist)
     }
   }
 
