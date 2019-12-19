@@ -60,13 +60,16 @@ class ConsonantVowelSelection extends React.Component {
 
 class WordEntry extends React.Component {
   keyPressed(e) {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !this.disabled()) {
       this.props.saveHandler(e);
     }
   }
 
+  disabled() {
+    return this.props.word.length === 0 || !stringContainsChars(this.props.mix, this.props.word)
+  }
+
   render() {
-    const disabled = this.props.word.length === 0 || !stringContainsChars(this.props.mix, this.props.word);
     return (
       <div id="word-entry-div">
         <input type="text"
@@ -80,7 +83,7 @@ class WordEntry extends React.Component {
         <button id="save-word"
           className="game-button"
           onClick={this.props.saveHandler}
-          disabled={disabled}>Save Word</button>
+          disabled={this.disabled()}>Save Word</button>
       </div>)
   }
 }
@@ -94,11 +97,11 @@ class SavedWords extends React.Component {
         pts = word.length + 'pts';
       }
       return (<tr>
-        <td key={word}>{word}</td><td>{pts}</td>
+        <td key={word}>{word}</td><td className="pts">{pts}</td>
       </tr>)
     }, this);
     return (
-      <div id="saved-words"> Saved Words
+      <div id="saved-words" class="word-list"> Saved Words
         <table id="saved-word-table">
           <tbody>
             {savedWords}
@@ -112,11 +115,11 @@ class ResultsDisplay extends React.Component {
   render() {
     const bestWords = this.props.results.slice(0, 10).map(function (word) {
       return (<tr key={word}>
-        <td >{word.toUpperCase()}</td><td>{word.length}pts</td>
+        <td >{word.toUpperCase()}</td><td className="pts">{word.length}pts</td>
       </tr>)
     })
     return (
-      <div id="results-display">
+      <div id="results-display" className="word-list">
         Best Words
         <table id="best-words">
           <tbody>

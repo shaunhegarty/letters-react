@@ -110,3 +110,12 @@
   margin: 10px;
 }
 
+.word-list > table {
+  font-family: monospace;
+  letter-spacing: 1px;
+}
+
+.word-list td.pts {
+  text-align: right;
+  width: 5%;
+}
