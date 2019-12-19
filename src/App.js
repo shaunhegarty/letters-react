@@ -24,7 +24,7 @@ class RoundController extends React.Component {
     return (<div id="round-controller">
       <button id="round-begin" className="game-button" onClick={this.props.roundStartHandler} disabled={this.props.countdown || !this.props.roundInProgress}>Begin Round</button>
       <button id="round-end" className="game-button" onClick={this.props.roundEndHandler} disabled={!this.props.roundInProgress}>End Round</button>
-      <button id="clear-letters" className="game-button" onClick={this.props.clearHandler} disabled={this.props.countdown}>Clear Letters</button>
+      <button id="clear-letters" className="game-button" onClick={this.props.clearHandler} disabled={this.props.countdown || this.props.mix.length === 0}>Clear Letters</button>
     </div>)
   }
 }
@@ -49,10 +49,11 @@ class LettersDisplay extends React.Component {
 
 class ConsonantVowelSelection extends React.Component {
   render() {
+    const disabled = this.props.mix.length >= this.props.gameSize;
     return (<div className="consonant-vowel-selection">
-      <button className="game-button" name="consonant" onClick={this.props.consonantHandler}>Consonant ({this.props.consonantList.length})</button>
-      <button className="game-button" name="vowel" onClick={this.props.vowelHandler}>Vowel ({this.props.vowelList.length})</button>
-      <button className="game-button" onClick={this.props.autoHandler}>Auto</button>
+      <button className="game-button" name="consonant" onClick={this.props.consonantHandler} disabled={disabled}>Consonant ({this.props.consonantList.length})</button>
+      <button className="game-button" name="vowel" onClick={this.props.vowelHandler} disabled={disabled}>Vowel ({this.props.vowelList.length})</button>
+      <button className="game-button" onClick={this.props.autoHandler} disabled={disabled}>Auto</button>
     </div>);
   }
 }
@@ -71,14 +72,14 @@ class WordEntry extends React.Component {
   render() {
     return (
       <div id="word-entry-div">
-        <input type="text"
-          id="word-entry"
+        <input type="text" name="wordEntry"
+          id="word-entry" autoComplete="off"
           value={this.props.word}
           maxLength={this.props.maxLength}
           onChange={this.props.changeHandler}
           onKeyPress={(e) => this.keyPressed(e)}
         />
-        <button id="backspace" className="game-button" onClick={this.props.backspaceHandler}>{'<'}</button>
+        <button id="backspace" className="game-button" onClick={this.props.backspaceHandler} disabled={this.props.word.length === 0}>{'<'}</button>
         <button id="save-word"
           className="game-button"
           onClick={this.props.saveHandler}
@@ -95,8 +96,8 @@ class SavedWords extends React.Component {
       if (this.props.results.includes(word.toLowerCase())) {
         pts = word.length + 'pts';
       }
-      return (<tr>
-        <td key={word}>{word}</td><td className="pts">{pts}</td>
+      return (<tr key={word}>
+        <td>{word}</td><td className="pts">{pts}</td>
       </tr>)
     }, this);
     return (
@@ -201,6 +202,10 @@ class LettersGame extends React.Component {
       vowelList: vowelList,
       consonantList: consonantList,
       currentWord: '',
+      startTime: '',
+      timeDisplay: '0.0',
+      countdown: false,
+      roundInProgress: false,
     });
   }
 
@@ -303,12 +308,12 @@ class LettersGame extends React.Component {
       timeDisplay: Math.abs(elapsedSeconds).toFixed(1),
     })
     if (elapsedSeconds < 0) {
-      clearInterval(this.intervalHandle);
       this.handleRoundEnd();
     }
   }
 
   handleRoundEnd() {
+    clearInterval(this.intervalHandle);
     this.setState({
       startTime: '',
       timeDisplay: '0.0',
@@ -326,7 +331,8 @@ class LettersGame extends React.Component {
           <RoundController
             clearHandler={(e) => this.handleClear(e)}
             roundStartHandler={(e) => this.handleRoundStart(e)}
-            roundEndHandler={(e) => this.handleGetResults(e)} 
+            roundEndHandler={(e) => this.handleRoundEnd(e)} 
+            mix={this.state.mix}
             countdown={this.state.countdown}
             roundInProgress={this.state.roundInProgress}/>
           <LettersDisplay letters={this.state.mix} size={this.state.gameSize} clickHandler={(e) => this.handleLetterClick(e)} />
@@ -337,7 +343,8 @@ class LettersGame extends React.Component {
             vowelList={this.state.vowelList}
             consonantList={this.state.consonantList}
             mix={this.state.mix}
-            gameSize={this.state.gameSize} />
+            gameSize={this.state.gameSize}
+            roundInProgress={this.state.roundInProgress} />
           <WordEntry
             saveHandler={(e) => this.handleSaveWord(e)}
             maxLength={this.state.gameSize}
