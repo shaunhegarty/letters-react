@@ -8,7 +8,9 @@ import axios from 'axios';
 
 class Letter extends React.Component {
   render() {
-    return (<td className="letter">{this.props.letter}</td>)
+    const letter = this.props.letter;
+    console.log(typeof letter);
+    return (<td className="letter" onClick={(e) => this.props.clickHandler(letter, e)}>{letter}</td>)
   }
 }
 
@@ -33,8 +35,8 @@ class LettersDisplay extends React.Component {
     const mix = strOfParticularLength(this.props.letters, this.props.size);
     const lettersArray = mix.toUpperCase().split('');
     const letters = lettersArray.map(function (character, index) {
-      return (<Letter key={index} letter={character} />);
-    });
+      return (<Letter key={index} letter={character} clickHandler={this.props.clickHandler}/>);
+    }, this);
     return (
       <table id="letters-display">
         <tbody>
@@ -57,23 +59,6 @@ class ConsonantVowelSelection extends React.Component {
 }
 
 class WordEntry extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { word: '' };
-  };
-
-  handleSave(e) {
-    const wordToSave = this.state.word;
-    if (wordToSave.length > 0) {
-      this.props.saveHandler(wordToSave);
-      document.getElementById('word-entry').value = "";
-    }
-  }
-
-  onChange(e) {
-    this.setState({ word: e.target.value.toUpperCase() })
-  }
-
   keyPressed(e) {
     if (e.key === "Enter") {
       this.handleSave();
@@ -81,18 +66,20 @@ class WordEntry extends React.Component {
   }
 
   render() {
-    const disabled = this.state.word.length === 0 || !stringContainsChars(this.props.mix, this.state.word);
+    const disabled = this.props.word.length === 0 || !stringContainsChars(this.props.mix, this.props.word);
     return (
       <div id="word-entry-div">
         <input type="text"
           id="word-entry"
+          value={this.props.word}
           maxLength={this.props.maxLength}
-          onChange={(e) => this.onChange(e)}
+          onChange={this.props.changeHandler}
           onKeyPress={(e) => this.keyPressed(e)}
         />
+        <button id="backspace" className="game-button" onClick={this.props.backspaceHandler}>{'<'}</button>
         <button id="save-word"
           className="game-button"
-          onClick={(e) => this.handleSave(e)}
+          onClick={this.props.saveHandler}
           disabled={disabled}>Save Word</button>
       </div>)
   }
@@ -124,8 +111,8 @@ class SavedWords extends React.Component {
 class ResultsDisplay extends React.Component {
   render() {
     const bestWords = this.props.results.slice(0, 10).map(function (word) {
-      return (<tr>
-        <td key={word}>{word.toUpperCase()}</td><td>{word.length}pts</td>
+      return (<tr key={word}>
+        <td >{word.toUpperCase()}</td><td>{word.length}pts</td>
       </tr>)
     })
     return (
@@ -152,6 +139,7 @@ class LettersGame extends React.Component {
       consonantList: letterDistribution(consonantDist),
       vowelCount: 0,
       consonantCount: 0,
+      currentWord: '',
     };
 
     // This will not work inside the function when it is passed, if this is not bound
@@ -171,10 +159,32 @@ class LettersGame extends React.Component {
     }
   }
 
-  handleSaveWord(newWord) {
+  handleWordChange = (e) => {
+    const word = e.target.value.toUpperCase();
+    this.setState({ currentWord: word }, function() {
+      console.log(this.state.word);
+    })
+  }
+
+  handleLetterClick(letter) {
+    const currentWord = this.state.currentWord;
+    this.setState({currentWord: currentWord + letter})
+  }
+
+  handleBackspaceClick() {
+    const currentWord = this.state.currentWord;
+    this.setState({currentWord: currentWord.slice(0, currentWord.length - 1)})
+  }
+
+  handleSaveWord() {
     let savedWords = new Set(this.state.savedWords);
-    savedWords = savedWords.add(newWord);
-    this.setState({ savedWords: savedWords })
+    const newWord = this.state.currentWord;
+
+    if (newWord.length > 0) {
+      savedWords = savedWords.add(newWord);
+      this.setState({word: ''});
+    }
+    this.setState({ savedWords: savedWords, currentWord: '' })
   }
 
   handleClear() {
@@ -188,6 +198,7 @@ class LettersGame extends React.Component {
       consonantCount: 0,
       vowelList: vowelList,
       consonantList: consonantList,
+      currentWord: '',
     });
   }
 
@@ -280,7 +291,7 @@ class LettersGame extends React.Component {
         <div id="letters-game-display">
           <GameTimer />
           <RoundController clearHandler={(e) => this.handleClear(e)} roundEndHandler={(e) => this.handleGetResults(e)} />
-          <LettersDisplay letters={this.state.mix} size={this.state.gameSize} />
+          <LettersDisplay letters={this.state.mix} size={this.state.gameSize} clickHandler={(e) => this.handleLetterClick(e)} />
           <ConsonantVowelSelection
             vowelHandler={(e) => this.handleVowelClick(e)}
             consonantHandler={(e) => this.handleConsonantClick(e)}
@@ -289,7 +300,13 @@ class LettersGame extends React.Component {
             consonantList={this.state.consonantList}
             mix={this.state.mix}
             gameSize={this.state.gameSize} />
-          <WordEntry saveHandler={(e) => this.handleSaveWord(e)} maxLength={this.state.gameSize} mix={this.state.mix} />
+          <WordEntry 
+            saveHandler={(e) => this.handleSaveWord(e)} 
+            maxLength={this.state.gameSize} 
+            mix={this.state.mix} 
+            word={this.state.currentWord} 
+            changeHandler={this.handleWordChange}
+            backspaceHandler={(e) => this.handleBackspaceClick(e)}/>
           <div id="words-panel">
             <SavedWords savedWords={this.state.savedWords} results={this.state.results} />
             <ResultsDisplay results={this.state.results} />

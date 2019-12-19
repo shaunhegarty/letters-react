@@ -79,6 +79,10 @@
   border-bottom: #282c34;
 }
 
+#backspace {
+  width: 50px;
+}
+
 .letter {
   display: block;
   float: left;
