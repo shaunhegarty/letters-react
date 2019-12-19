@@ -61,7 +61,6 @@ export function randomLetterFromList(letterList) {
 }
 
 export function chooseLetterType(vowelCount, consonantCount, gameSize) {
-    console.log('vowelCount: ' + vowelCount + '; consonantCount: ' + consonantCount);
     if (vowelsAllowed(vowelCount, gameSize) && consonantsAllowed(consonantCount, gameSize)) {
         return Math.random() < cSplit;
     } else {

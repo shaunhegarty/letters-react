@@ -46,19 +46,6 @@ class LettersDisplay extends React.Component {
   }
 }
 
-class ResultsDisplay extends React.Component {
-  render() {
-    const bestWords = this.props.results.slice(0, 10).map(function(word){
-      return <li key={word}>{word.toUpperCase()}</li>
-    })
-    return (
-      <div id="results-display">
-        Best Words
-        <div id="best-words"><ol>{bestWords}</ol></div>
-      </div>)
-  }
-}
-
 class ConsonantVowelSelection extends React.Component {
   render() {
     return (<div className="consonant-vowel-selection">
@@ -87,12 +74,27 @@ class WordEntry extends React.Component {
     this.setState({ word: e.target.value.toUpperCase() })
   }
 
+  keyPressed(e) {
+    if (e.key === "Enter") {
+      this.handleSave();
+    }
+  }
+
   render() {
     const disabled = this.state.word.length === 0 || !stringContainsChars(this.props.mix, this.state.word);
-    return (<div id="word-entry-div">
-      <input type="text" id="word-entry" maxLength={this.props.maxLength} onChange={(e) => this.onChange(e)} />
-      <button id="save-word" className="game-button" onClick={(e) => this.handleSave(e)} disabled={disabled}>Save Word</button>
-    </div>)
+    return (
+      <div id="word-entry-div">
+        <input type="text"
+          id="word-entry"
+          maxLength={this.props.maxLength}
+          onChange={(e) => this.onChange(e)}
+          onKeyPress={(e) => this.keyPressed(e)}
+        />
+        <button id="save-word"
+          className="game-button"
+          onClick={(e) => this.handleSave(e)}
+          disabled={disabled}>Save Word</button>
+      </div>)
   }
 }
 
@@ -100,18 +102,41 @@ class SavedWords extends React.Component {
   render() {
     const savedWordsArray = [...this.props.savedWords];
     const savedWords = savedWordsArray.map(function (word) {
-      return <td key={word}>{word}</td>
-    });
+      let pts = '';
+      if (this.props.results.includes(word.toLowerCase())) {
+        pts = word.length + 'pts';
+      }
+      return (<tr>
+        <td key={word}>{word}</td><td>{pts}</td>
+      </tr>)
+    }, this);
     return (
       <div id="saved-words"> Saved Words
         <table id="saved-word-table">
           <tbody>
-            <tr>
-              {savedWords}
-            </tr>
+            {savedWords}
           </tbody>
         </table>
-    </div>)
+      </div>)
+  }
+}
+
+class ResultsDisplay extends React.Component {
+  render() {
+    const bestWords = this.props.results.slice(0, 10).map(function (word) {
+      return (<tr>
+        <td key={word}>{word.toUpperCase()}</td><td>{word.length}pts</td>
+      </tr>)
+    })
+    return (
+      <div id="results-display">
+        Best Words
+        <table id="best-words">
+          <tbody>
+            {bestWords}
+          </tbody>
+        </table>
+      </div>)
   }
 }
 
@@ -180,7 +205,6 @@ class LettersGame extends React.Component {
     const letter = vowelList[index];
     vowelList = vowelList.slice(0, index) + vowelList.slice(index + 1);
     this.setState({ vowelList: vowelList });
-    console.log('retrieving vowel | ' + letter + ' | ' + vowelList + ' | pile: ' + vowelList.length);
     return letter
   }
 
@@ -190,7 +214,6 @@ class LettersGame extends React.Component {
     const letter = consonantList[index];
     consonantList = consonantList.slice(0, index) + consonantList.slice(index + 1);
     this.setState({ consonantList: consonantList });
-    console.log('retrieving consonant | ' + letter + ' | ' + consonantList);
     return letter
   }
 
@@ -270,7 +293,7 @@ class LettersGame extends React.Component {
             gameSize={this.state.gameSize} />
           <WordEntry saveHandler={(e) => this.handleSaveWord(e)} maxLength={this.state.gameSize} mix={this.state.mix} />
           <div id="words-panel">
-            <SavedWords savedWords={this.state.savedWords} />
+            <SavedWords savedWords={this.state.savedWords} results={this.state.results} />
             <ResultsDisplay results={this.state.results} />
           </div>
         </div>
