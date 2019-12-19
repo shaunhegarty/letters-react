@@ -1,6 +1,8 @@
 import React from 'react';
-import { strOfParticularLength, stringContainsChars, processResults, letterDistribution, 
-  randomLetterFromList, vowelDist, consonantDist, chooseLetterType, vowelsAllowed, consonantsAllowed } from './letters.js';
+import {
+  strOfParticularLength, stringContainsChars, processResults, letterDistribution,
+  randomLetterFromList, vowelDist, consonantDist, chooseLetterType, vowelsAllowed, consonantsAllowed
+} from './letters.js';
 import './App.css';
 import axios from 'axios';
 
@@ -12,16 +14,16 @@ class Letter extends React.Component {
 
 class GameTimer extends React.Component {
   render() {
-    return (<div id="game-timer">Game Timer</div>)
+    return (<div id="game-timer">Timer</div>)
   }
 }
 
 class RoundController extends React.Component {
   render() {
     return (<div id="round-controller">
-      <GameTimer />
-      <button id="round-begin">Begin Round</button>
-      <button id="clear-letters" onClick={this.props.clearHandler}>Clear Letters</button>
+      <button id="round-begin" className="game-button" disabled>Begin Round</button>
+      <button id="round-end" className="game-button" onClick={this.props.roundEndHandler}>End Round</button>
+      <button id="clear-letters" className="game-button" onClick={this.props.clearHandler} >Clear Letters</button>
     </div>)
   }
 }
@@ -46,11 +48,13 @@ class LettersDisplay extends React.Component {
 
 class ResultsDisplay extends React.Component {
   render() {
+    const bestWords = this.props.results.slice(0, 10).map(function(word){
+      return <li key={word}>{word.toUpperCase()}</li>
+    })
     return (
       <div id="results-display">
         Best Words
-      <div id="best-words">{this.props.results.slice(0, 30).join(', ')}</div>
-        <button id="get-best-words" onClick={(e) => this.props.getResultsHandler(e)}>Get Words</button>
+        <div id="best-words"><ol>{bestWords}</ol></div>
       </div>)
   }
 }
@@ -58,9 +62,9 @@ class ResultsDisplay extends React.Component {
 class ConsonantVowelSelection extends React.Component {
   render() {
     return (<div className="consonant-vowel-selection">
-      <button name="consonant" onClick={this.props.consonantHandler}>Consonant ({this.props.consonantList.length} left)</button>
-      <button name="vowel" onClick={this.props.vowelHandler}>Vowel ({this.props.vowelList.length} left)</button>
-      <button onClick={this.props.autoHandler}>Auto</button>
+      <button className="game-button" name="consonant" onClick={this.props.consonantHandler}>Consonant ({this.props.consonantList.length})</button>
+      <button className="game-button" name="vowel" onClick={this.props.vowelHandler}>Vowel ({this.props.vowelList.length})</button>
+      <button className="game-button" onClick={this.props.autoHandler}>Auto</button>
     </div>);
   }
 }
@@ -87,7 +91,7 @@ class WordEntry extends React.Component {
     const disabled = this.state.word.length === 0 || !stringContainsChars(this.props.mix, this.state.word);
     return (<div id="word-entry-div">
       <input type="text" id="word-entry" maxLength={this.props.maxLength} onChange={(e) => this.onChange(e)} />
-      <button id="save-word" onClick={(e) => this.handleSave(e)} disabled={disabled}>Save Word</button>
+      <button id="save-word" className="game-button" onClick={(e) => this.handleSave(e)} disabled={disabled}>Save Word</button>
     </div>)
   }
 }
@@ -98,13 +102,16 @@ class SavedWords extends React.Component {
     const savedWords = savedWordsArray.map(function (word) {
       return <td key={word}>{word}</td>
     });
-    return (<table id="saved-word-table">
-      <tbody>
-        <tr>
-          {savedWords}
-        </tr>
-      </tbody>
-    </table>)
+    return (
+      <div id="saved-words"> Saved Words
+        <table id="saved-word-table">
+          <tbody>
+            <tr>
+              {savedWords}
+            </tr>
+          </tbody>
+        </table>
+    </div>)
   }
 }
 
@@ -247,21 +254,27 @@ class LettersGame extends React.Component {
   }
 
   render() {
-    return (<div className="letters-game">
-      <RoundController clearHandler={(e) => this.handleClear(e)} />
-      <LettersDisplay letters={this.state.mix} size={this.state.gameSize} />
-      <ConsonantVowelSelection
-        vowelHandler={(e) => this.handleVowelClick(e)}
-        consonantHandler={(e) => this.handleConsonantClick(e)}
-        autoHandler={(e) => this.handleAutoClick(e)}
-        vowelList={this.state.vowelList}
-        consonantList={this.state.consonantList}
-        mix={this.state.mix}
-        gameSize={this.state.gameSize} />
-      <WordEntry saveHandler={(e) => this.handleSaveWord(e)} maxLength={this.state.gameSize} mix={this.state.mix} />
-      <SavedWords savedWords={this.state.savedWords} />
-      <ResultsDisplay results={this.state.results} getResultsHandler={(e) => this.handleGetResults(e)} />
-    </div>
+    return (
+      <div id="letters-game" className="letters-game">
+        <div id="letters-game-display">
+          <GameTimer />
+          <RoundController clearHandler={(e) => this.handleClear(e)} roundEndHandler={(e) => this.handleGetResults(e)} />
+          <LettersDisplay letters={this.state.mix} size={this.state.gameSize} />
+          <ConsonantVowelSelection
+            vowelHandler={(e) => this.handleVowelClick(e)}
+            consonantHandler={(e) => this.handleConsonantClick(e)}
+            autoHandler={(e) => this.handleAutoClick(e)}
+            vowelList={this.state.vowelList}
+            consonantList={this.state.consonantList}
+            mix={this.state.mix}
+            gameSize={this.state.gameSize} />
+          <WordEntry saveHandler={(e) => this.handleSaveWord(e)} maxLength={this.state.gameSize} mix={this.state.mix} />
+          <div id="words-panel">
+            <SavedWords savedWords={this.state.savedWords} />
+            <ResultsDisplay results={this.state.results} />
+          </div>
+        </div>
+      </div>
     )
   }
 }
