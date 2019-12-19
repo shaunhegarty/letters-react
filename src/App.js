@@ -9,23 +9,22 @@ import axios from 'axios';
 class Letter extends React.Component {
   render() {
     const letter = this.props.letter;
-    console.log(typeof letter);
     return (<td className="letter" onClick={(e) => this.props.clickHandler(letter, e)}>{letter}</td>)
   }
 }
 
 class GameTimer extends React.Component {
   render() {
-    return (<div id="game-timer">Timer</div>)
+    return (<div id="game-timer">{this.props.displayTime}</div>)
   }
 }
 
 class RoundController extends React.Component {
   render() {
     return (<div id="round-controller">
-      <button id="round-begin" className="game-button" disabled>Begin Round</button>
-      <button id="round-end" className="game-button" onClick={this.props.roundEndHandler}>End Round</button>
-      <button id="clear-letters" className="game-button" onClick={this.props.clearHandler} >Clear Letters</button>
+      <button id="round-begin" className="game-button" onClick={this.props.roundStartHandler} disabled={this.props.countdown || !this.props.roundInProgress}>Begin Round</button>
+      <button id="round-end" className="game-button" onClick={this.props.roundEndHandler} disabled={!this.props.roundInProgress}>End Round</button>
+      <button id="clear-letters" className="game-button" onClick={this.props.clearHandler} disabled={this.props.countdown}>Clear Letters</button>
     </div>)
   }
 }
@@ -35,7 +34,7 @@ class LettersDisplay extends React.Component {
     const mix = strOfParticularLength(this.props.letters, this.props.size);
     const lettersArray = mix.toUpperCase().split('');
     const letters = lettersArray.map(function (character, index) {
-      return (<Letter key={index} letter={character} clickHandler={this.props.clickHandler}/>);
+      return (<Letter key={index} letter={character} clickHandler={this.props.clickHandler} />);
     }, this);
     return (
       <table id="letters-display">
@@ -66,7 +65,7 @@ class WordEntry extends React.Component {
   }
 
   disabled() {
-    return this.props.word.length === 0 || !stringContainsChars(this.props.mix, this.props.word)
+    return this.props.word.length === 0 || !stringContainsChars(this.props.mix, this.props.word) || !this.props.countdown || !this.props.roundInProgress;
   }
 
   render() {
@@ -101,7 +100,7 @@ class SavedWords extends React.Component {
       </tr>)
     }, this);
     return (
-      <div id="saved-words" class="word-list"> Saved Words
+      <div id="saved-words" className="word-list"> Saved Words
         <table id="saved-word-table">
           <tbody>
             {savedWords}
@@ -143,40 +142,40 @@ class LettersGame extends React.Component {
       vowelCount: 0,
       consonantCount: 0,
       currentWord: '',
+      startTime: '',
+      timeDisplay: '0.0',
+      countdown: false,
+      roundInProgress: false,
     };
-
-    // This will not work inside the function when it is passed, if this is not bound
-    this.handleSaveWord = this.handleSaveWord.bind(this);
+    this.intervalHandle = null; // This is for managing the clock
   };
 
   handleNewLetter(newLetter) {
     if (this.state.mix.length < this.state.gameSize) {
-      const currentMix = this.state.mix;
-      this.setState({ mix: currentMix + newLetter })
+      const newMix = this.state.mix + newLetter;
+      this.setState({ mix: newMix, roundInProgress: newMix.length === this.state.gameSize })
     }
   }
 
   handleNewMix(newMix) {
     if (newMix.length <= this.state.gameSize) {
-      this.setState({ mix: newMix });
+      this.setState({ mix: newMix, roundInProgress: newMix.length === this.state.gameSize  });
     }
   }
 
   handleWordChange = (e) => {
     const word = e.target.value.toUpperCase();
-    this.setState({ currentWord: word }, function() {
-      console.log(this.state.word);
-    })
+    this.setState({ currentWord: word })
   }
 
   handleLetterClick(letter) {
     const currentWord = this.state.currentWord;
-    this.setState({currentWord: currentWord + letter})
+    this.setState({ currentWord: currentWord + letter })
   }
 
   handleBackspaceClick() {
     const currentWord = this.state.currentWord;
-    this.setState({currentWord: currentWord.slice(0, currentWord.length - 1)})
+    this.setState({ currentWord: currentWord.slice(0, currentWord.length - 1) })
   }
 
   handleSaveWord() {
@@ -185,7 +184,7 @@ class LettersGame extends React.Component {
 
     if (newWord.length > 0) {
       savedWords = savedWords.add(newWord);
-      this.setState({word: ''});
+      this.setState({ word: '' });
     }
     this.setState({ savedWords: savedWords, currentWord: '' })
   }
@@ -205,8 +204,7 @@ class LettersGame extends React.Component {
     });
   }
 
-  handleGetResults = async event => {
-    event.preventDefault();
+  handleGetResults = async () => {
     let subAnagrams;
     if (this.state.mix.length) {
       const response = await axios.get('http://api.shaunhegarty.com/subanagrams/' + this.state.mix);
@@ -288,12 +286,49 @@ class LettersGame extends React.Component {
     this.handleNewMix(mix);
   }
 
+  handleRoundStart() {
+    const startTime = Date.now();
+    this.setState({
+      startTime: startTime,
+      countdown: true,
+    });
+    clearInterval(this.intervalHandle);
+    this.intervalHandle = setInterval(() => this.tick(), 100)
+  }
+
+  tick() {
+    const roundLength = 30
+    let elapsedSeconds = roundLength - (Date.now() - this.state.startTime) / 1000;
+    this.setState({
+      timeDisplay: Math.abs(elapsedSeconds).toFixed(1),
+    })
+    if (elapsedSeconds < 0) {
+      clearInterval(this.intervalHandle);
+      this.handleRoundEnd();
+    }
+  }
+
+  handleRoundEnd() {
+    this.setState({
+      startTime: '',
+      timeDisplay: '0.0',
+      countdown: false,
+      roundInProgress: false,
+    })
+    this.handleGetResults();
+  }
+
   render() {
     return (
       <div id="letters-game" className="letters-game">
         <div id="letters-game-display">
-          <GameTimer />
-          <RoundController clearHandler={(e) => this.handleClear(e)} roundEndHandler={(e) => this.handleGetResults(e)} />
+          <GameTimer displayTime={this.state.timeDisplay} />
+          <RoundController
+            clearHandler={(e) => this.handleClear(e)}
+            roundStartHandler={(e) => this.handleRoundStart(e)}
+            roundEndHandler={(e) => this.handleGetResults(e)} 
+            countdown={this.state.countdown}
+            roundInProgress={this.state.roundInProgress}/>
           <LettersDisplay letters={this.state.mix} size={this.state.gameSize} clickHandler={(e) => this.handleLetterClick(e)} />
           <ConsonantVowelSelection
             vowelHandler={(e) => this.handleVowelClick(e)}
@@ -303,13 +338,15 @@ class LettersGame extends React.Component {
             consonantList={this.state.consonantList}
             mix={this.state.mix}
             gameSize={this.state.gameSize} />
-          <WordEntry 
-            saveHandler={(e) => this.handleSaveWord(e)} 
-            maxLength={this.state.gameSize} 
-            mix={this.state.mix} 
-            word={this.state.currentWord} 
+          <WordEntry
+            saveHandler={(e) => this.handleSaveWord(e)}
+            maxLength={this.state.gameSize}
+            mix={this.state.mix}
+            word={this.state.currentWord}
             changeHandler={this.handleWordChange}
-            backspaceHandler={(e) => this.handleBackspaceClick(e)}/>
+            backspaceHandler={(e) => this.handleBackspaceClick(e)} 
+            countdown={this.state.countdown}
+            roundInProgress={this.state.roundInProgress}/>
           <div id="words-panel">
             <SavedWords savedWords={this.state.savedWords} results={this.state.results} />
             <ResultsDisplay results={this.state.results} />
