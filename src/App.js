@@ -60,13 +60,9 @@ class ConsonantVowelSelection extends React.Component {
 
 class WordEntry extends React.Component {
   keyPressed(e) {
-    if (e.key === "Enter" && !this.disabled()) {
+    if (e.key === "Enter" && !this.props.disabled) {
       this.props.saveHandler(e);
     }
-  }
-
-  disabled() {
-    return this.props.word.length === 0 || !stringContainsChars(this.props.mix, this.props.word) || !this.props.countdown || !this.props.roundInProgress;
   }
 
   render() {
@@ -83,7 +79,7 @@ class WordEntry extends React.Component {
         <button id="save-word"
           className="game-button"
           onClick={this.props.saveHandler}
-          disabled={this.disabled()}>Save Word</button>
+          disabled={this.props.disabled}>Save Word</button>
       </div>)
   }
 }
@@ -324,6 +320,7 @@ class LettersGame extends React.Component {
   }
 
   render() {
+    const wordEntryDisabled = this.state.currentWord.length === 0 || !stringContainsChars(this.state.mix, this.state.currentWord) || !this.state.countdown || !this.state.roundInProgress
     return (
       <div id="letters-game" className="letters-game">
         <div id="letters-game-display">
@@ -348,12 +345,10 @@ class LettersGame extends React.Component {
           <WordEntry
             saveHandler={(e) => this.handleSaveWord(e)}
             maxLength={this.state.gameSize}
-            mix={this.state.mix}
+            disabled={wordEntryDisabled}
             word={this.state.currentWord}
             changeHandler={this.handleWordChange}
-            backspaceHandler={(e) => this.handleBackspaceClick(e)} 
-            countdown={this.state.countdown}
-            roundInProgress={this.state.roundInProgress}/>
+            backspaceHandler={(e) => this.handleBackspaceClick(e)}/>
           <div id="words-panel">
             <SavedWords savedWords={this.state.savedWords} results={this.state.results} />
             <ResultsDisplay results={this.state.results} />
