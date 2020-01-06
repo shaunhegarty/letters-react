@@ -9,7 +9,7 @@ import axios from 'axios';
 class Letter extends React.Component {
   render() {
     const letter = this.props.letter;
-    return (<td className="letter" onClick={(e) => this.props.clickHandler(letter, e)}>{letter}</td>)
+    return (<div className="letter" onClick={(e) => this.props.clickHandler(letter, e)}>{letter}</div>)
   }
 }
 
@@ -37,13 +37,9 @@ class LettersDisplay extends React.Component {
       return (<Letter key={index} letter={character} clickHandler={this.props.clickHandler} />);
     }, this);
     return (
-      <table id="letters-display">
-        <tbody>
-          <tr>
-            {letters}
-          </tr>
-        </tbody>
-      </table>)
+      <div id="letters-display">
+        {letters}
+      </div>)
   }
 }
 
