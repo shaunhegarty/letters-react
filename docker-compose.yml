@@ -5,10 +5,10 @@ services:
         build:
             context: .
             dockerfile: Dockerfile-prod
-        ports:
-            - "3001:80"
+        network_mode: "host"
         volumes:
             - .:/app
             - /app/node_modules
+            - ./deployment/nginx/:/etc/nginx/conf.d
         environment:
             - NODE_ENV=production
