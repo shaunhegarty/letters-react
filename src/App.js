@@ -204,7 +204,7 @@ class LettersGame extends React.Component {
   handleGetResults = async () => {
     let subAnagrams;
     if (this.state.mix.length) {
-      const response = await axios.get('http://api.shaunhegarty.com/subanagrams/' + this.state.mix);
+      const response = await axios.get('http://shaunhegarty.com/api/subanagrams/' + this.state.mix);
       subAnagrams = processResults(response.data);
     } else {
       subAnagrams = [];
