@@ -1,5 +1,5 @@
 # build
-FROM node:latest as react-build
+FROM node:16 as react-build
 WORKDIR /app
 COPY . ./
 RUN yarn
