@@ -355,8 +355,50 @@ class LettersGame extends React.Component {
   }
 }
 
+function ApiProbe(props) {
+  return (<button className="api-probe">Api Probe</button>)
+}
+
+function ViewButton(props){
+  return (<button className="view-button" onClick={() => props.onClick(props.view)}>{props.view}</button>)
+}
+
+class ViewSelector extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      view: 'Game',
+    }
+  }
+
+  handleClickView(view) {
+    console.log('Clicked View: ' + view)
+    this.setState({view: view})
+  }
+
+  render() {
+    const view = this.state.view;
+    let selectedView = (<div>Selected View</div>);
+    if(view === 'Game') {
+      selectedView = (<LettersGame />)
+    } else if(view === 'Probe') {
+      selectedView = (<ApiProbe />)
+    }
+    return (
+      <div id='view-selector' className='view-selector'>
+        <ViewButton view='Game' onClick={(e) => this.handleClickView(e)}></ViewButton>
+        <ViewButton view='Probe' onClick={(e) => this.handleClickView(e)}></ViewButton>
+        <div id='selected-view' className='selected-view'>
+          {selectedView}
+        </div>
+      </div>
+    )
+  }
+}
+
+
 function App() {
-  return (<LettersGame />);
+  return (<ViewSelector />);
 }
 
 export default App;
