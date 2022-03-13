@@ -3,7 +3,6 @@ import {
     strOfParticularLength, stringContainsChars, processResults, letterDistribution,
     randomLetterFromList, vowelDist, consonantDist, chooseLetterType, vowelsAllowed, consonantsAllowed
 } from './letters.js';
-import './App.css';
 import axios from 'axios';
 
 class Letter extends React.Component {
@@ -333,6 +332,10 @@ class LettersGame extends React.Component {
             roundInProgress: false,
         })
         this.handleGetResults();
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.intervalHandle);
     }
 
     render() {

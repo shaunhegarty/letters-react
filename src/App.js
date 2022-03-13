@@ -1,110 +1,35 @@
 import React from 'react';
 import './App.css';
-import LettersGame from './lettersgame.js';
-import { WordEntry } from './lettersgame.js';
-import axios from 'axios';
+import './wordprobe/wordprobe.css'
+import './letters/letters.css'
+import LettersGame from './letters/lettersgame.js';
+import ApiProbe from './wordprobe/wordprobe.js';
 
-class ApiProbe extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      currentWord: '',
-    }
-  }
 
-  handleWordChange = (e) => {
-    const word = e.target.value.toUpperCase();
-    this.setState({ currentWord: word })
-  }
-
-  handleGetResults = async () => {
-    let subAnagrams;
-    if (this.state.currentWord.length) {
-      const response = await axios.get('http://shaunhegarty.com/api/subanagrams/' + this.state.currentWord);
-      subAnagrams = response.data;
-      console.log(response.data)
-    } else {
-      subAnagrams = [];
-      console.log('No Word')
-    }
-    this.setState({ results: subAnagrams });
-  };
-
-  render() {
-    return (
-      <div>
-        <WordEntry
-          maxLength={15}
-          disabled={false}
-          word={this.state.currentWord}
-          showBackspace={false}
-          buttonText='Search'
-          changeHandler={this.handleWordChange}
-          saveHandler={(e) => this.handleGetResults(e)}
-        />
-        <SubAnagramsDisplay data={this.state.results} />
-      </div>
-    )
-    // return (<div>Api Probe</div>)
-  }
-}
-
-class SubAnagramsDisplay extends React.Component {
-  render() {
-    if (!this.props.data) {
-      return <div></div>
-    }
-    const max = this.props.data.max;
-    const keys = Object.keys(this.props.data.words).sort().reverse();
-    const data = this.props.data;
-    const wordLists = keys.map(function (key) {
-      let wordlist = data.words[key].words;
-      return (<WordList key={key} words={wordlist} text={key + "-letter words (" + wordlist.length + ")"} />)
-    })
-    return (<div>
-      <div id='longest-word'>Most Letters in Word: {String(max)}</div>
-      {wordLists}
-    </div>)
-  }
-}
-
-class WordList extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      expanded: false,
-    };
-  };
-
-  handleClick() {
-    this.setState({ expanded: !this.state.expanded });
-  }
-
-  render() {
-    const listItemsFunc = function (word) {
-      return (<li key={word} className="word-list-item">{word.toUpperCase()}</li>)
-    }
-    const listItems = this.state.expanded ? this.props.words.map(listItemsFunc) : null;
-    return (
-    <div onClick={() => this.handleClick()}>
-      <div className="word-list-text">{this.props.text}</div>
-      <ul className="word-list">
-        {listItems}
-      </ul>
-    </div>
-    )
-  }
-}
 
 function ViewButton(props) {
-  return (<div className="view-button" onClick={() => props.onClick(props.view)}>{props.view}</div>)
+  const selectedClass = props.selected ? " button-selected" : "";
+  return (
+    <div
+      className={"view-button" + selectedClass}
+      onClick={() => props.onClick(props.view)}
+    >
+      {props.view}
+    </div>
+  )
+}
+
+
+class Views {
+  static PROBE = 'Word Probe';
+  static GAME = 'Game';
 }
 
 class ViewSelector extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      view: 'Game',
+      view: Views.PROBE,
     }
   }
 
@@ -113,18 +38,26 @@ class ViewSelector extends React.Component {
     this.setState({ view: view })
   }
 
+  renderViewButton(view, state) {
+    const selected = state.view === view;
+    return <ViewButton key={view} view={view} selected={selected} onClick={(e) => this.handleClickView(e)}></ViewButton>
+  }
+
   render() {
+    const viewsList = [Views.PROBE, Views.GAME]
+    const views = viewsList.map((view) => this.renderViewButton(view, this.state));
     const view = this.state.view;
     let selectedView = (<div>Selected View</div>);
-    if (view === 'Game') {
+    if (view === Views.GAME) {
       selectedView = (<LettersGame />)
-    } else if (view === 'Probe') {
+    } else if (view === Views.PROBE) {
       selectedView = (<ApiProbe />)
     }
     return (
-      <div id='view-selector' className='view-selector'>
-        <ViewButton view='Game' onClick={(e) => this.handleClickView(e)}></ViewButton>
-        <ViewButton view='Probe' onClick={(e) => this.handleClickView(e)}></ViewButton>
+      <div id="view-container" className="grid-container">
+        <div id='view-selector' className='view-selector'>
+          {views}
+        </div>
         <div id='selected-view' className='selected-view'>
           {selectedView}
         </div>
