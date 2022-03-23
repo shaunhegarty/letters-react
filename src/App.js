@@ -4,6 +4,7 @@ import './wordprobe/wordprobe.css'
 import './letters/letters.css'
 import LettersGame from './letters/lettersgame.js';
 import ApiProbe from './wordprobe/wordprobe.js';
+import LadderExplorer from './ladders/ladders.js';
 
 
 
@@ -23,6 +24,7 @@ function ViewButton(props) {
 class Views {
   static PROBE = 'Word Probe';
   static GAME = 'Game';
+  static LADDER_EXPLORER = 'Ladder Explorer'
 }
 
 class ViewSelector extends React.Component {
@@ -44,7 +46,7 @@ class ViewSelector extends React.Component {
   }
 
   render() {
-    const viewsList = [Views.PROBE, Views.GAME]
+    const viewsList = [Views.PROBE, Views.GAME, Views.LADDER_EXPLORER]
     const views = viewsList.map((view) => this.renderViewButton(view, this.state));
     const view = this.state.view;
     let selectedView = (<div>Selected View</div>);
@@ -52,6 +54,8 @@ class ViewSelector extends React.Component {
       selectedView = (<LettersGame />)
     } else if (view === Views.PROBE) {
       selectedView = (<ApiProbe />)
+    } else if (view === Views.LADDER_EXPLORER) {
+      selectedView = (<LadderExplorer />)
     }
     return (
       <div id="view-container" className="grid-container">
