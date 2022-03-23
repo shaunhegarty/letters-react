@@ -2,6 +2,7 @@ import React from 'react';
 import './App.css';
 import './wordprobe/wordprobe.css'
 import './letters/letters.css'
+import './ladders/ladders.css'
 import LettersGame from './letters/lettersgame.js';
 import ApiProbe from './wordprobe/wordprobe.js';
 import LadderExplorer from './ladders/ladders.js';

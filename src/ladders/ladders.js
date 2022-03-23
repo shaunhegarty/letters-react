@@ -7,14 +7,13 @@ class LadderExplorer extends React.Component {
         this.state = {
             length: 3,
             validWords: [],
-            ladders: {},
+            ladders: [],
         }
     }
 
     handleGetLadders = async () => {
         const response = await axios.get('http://shaunhegarty.com/api/ladders/1/' + this.state.length)
-        let ladderKey = this.state.length + '-ladders'
-        let ladders = response.data[ladderKey]
+        let ladders = response.data['ladders']
         this.setState({'ladders': ladders})
         console.log(ladders)
     }
@@ -22,7 +21,17 @@ class LadderExplorer extends React.Component {
     render() {
         return (<div id="ladder-explorer">
             <GetLadderButton getLadderHandler={(e) => this.handleGetLadders(e)} />
+            <SimpleLadderDisplay ladders={this.state.ladders} />
         </div>)
+    }
+}
+
+class SimpleLadderDisplay extends React.Component {
+    render() {
+        const ladders = this.props.ladders.map(function (ladder, index) {
+            return (<div class="ladder-pair">{ladder.pair}: Fewest Words: {ladder.minlength} | Difficulty: {ladder.difficulty}</div>)
+        })
+        return (<div id="ladder-display">{ladders}</div>)
     }
 }
 
