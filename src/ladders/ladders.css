@@ -1,3 +1,8 @@
 .ladder-pair{
-  font-size: 12px;
+  font-size: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  background-color: #545b6b;
+  margin: 1px;
 }
+

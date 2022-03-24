@@ -14,7 +14,7 @@ class LadderExplorer extends React.Component {
     handleGetLadders = async () => {
         const response = await axios.get('http://shaunhegarty.com/api/ladders/1/' + this.state.length)
         let ladders = response.data['ladders']
-        this.setState({'ladders': ladders})
+        this.setState({ 'ladders': ladders })
         console.log(ladders)
     }
 
@@ -29,21 +29,40 @@ class LadderExplorer extends React.Component {
 class SimpleLadderDisplay extends React.Component {
     render() {
         const ladders = this.props.ladders.map(function (ladder, index) {
-            return (<div class="ladder-pair">{ladder.pair}: Fewest Words: {ladder.minlength} | Difficulty: {ladder.difficulty}</div>)
+            return (<LadderPair ladder={ladder} />)
         })
         return (<div id="ladder-display">{ladders}</div>)
+    }
+}
+
+class LadderPair extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            expanded: false,
+        }
+    }
+
+    render() {
+        return (
+            <div className="ladder-pair">
+                <div className="ladder-key">{this.props.ladder.pair} </div>
+                <div className="shortest-path">{this.props.ladder.min_length} </div>
+                <div className="ladder-difficulty">Difficulty: {this.props.ladder.difficulty}</div>
+            </div>
+        )
     }
 }
 
 class GetLadderButton extends React.Component {
     render() {
         return (
-            <button 
-                id="get-ladder-button" 
-                className="get-ladder-button"  
-                onClick={this.props.getLadderHandler} 
+            <button
+                id="get-ladder-button"
+                className="get-ladder-button"
+                onClick={this.props.getLadderHandler}
             >
-            Get Ladders
+                Get Ladders
             </button>)
     }
 }
