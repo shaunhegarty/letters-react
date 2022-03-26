@@ -29,27 +29,89 @@ class LadderExplorer extends React.Component {
 class SimpleLadderDisplay extends React.Component {
     render() {
         const ladders = this.props.ladders.map(function (ladder, index) {
-            return (<LadderPair ladder={ladder} />)
+            return (<LadderDisplayUnit key={ladder.pair} ladder={ladder} />)
         })
         return (<div id="ladder-display">{ladders}</div>)
     }
 }
 
-class LadderPair extends React.Component {
+
+class LadderDisplayUnit extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            expanded: false,
+            ladderData: {},
+            displayLadder: false,
+            displayGame: false,
         }
     }
 
+    toggleShowLadder = async() =>  {
+        console.log(this.state.displayLadder)
+        if (!this.state.chain) {
+            const response = await axios.get('http://shaunhegarty.com/api/ladders/' + this.props.ladder.pair)
+            let chain = response.data['ladder']
+            this.setState({'chain': chain})
+        }
+        this.state.displayLadder ? this.collapse() : this.showLadder();
+    }
+
+    showGame() {
+        this.setState({'displayLadder': false, 'displayGame': true})
+    }
+
+    showLadder() {
+        this.setState({'displayLadder': true, 'displayGame': false})
+    }
+
+    collapse() {
+        this.setState({'displayLadder': false, 'displayGame': false})
+    }
+
+    render() {
+        let expansion;
+        if (this.state.displayLadder) {
+            expansion = (<LadderShow ladder={this.state.chain}/>)
+        }
+        return (<div id='single-display'>
+            <LadderPair ladder={this.props.ladder} clickHandler={() => this.toggleShowLadder()}></LadderPair>
+            {expansion}
+        </div>)
+    }
+}
+
+class LadderPair extends React.Component {
+
     render() {
         return (
-            <div className="ladder-pair">
+            <div className="ladder-pair" onClick={this.props.clickHandler}>
                 <div className="ladder-key">{this.props.ladder.pair} </div>
                 <div className="shortest-path">{this.props.ladder.min_length} </div>
                 <div className="ladder-difficulty">Difficulty: {this.props.ladder.difficulty}</div>
             </div>
+        )
+    }
+}
+
+class LadderShow extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            pair: props.ladder.pair,
+            ladder: props.ladder.chain,
+            userLadder: [],
+            isValid: true,
+            isComplete: false,
+            isOptimal: false,
+        }
+    }
+
+    render() {
+        const ladderWords = this.state.ladder.map(function (word, index) {
+            return (<div key={word}>{word}</div>)
+        })
+        return (
+            <div id={this.state.pair + '-ladder-show'}>{ladderWords}</div>
         )
     }
 }
