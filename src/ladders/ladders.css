@@ -4,13 +4,28 @@
   grid-template-columns: 1fr 1fr 2fr;
   background-color: #545b6b;
   margin: 1px;
+  padding: 2px;
+  padding-left: 3px;
 }
 
 .ladder-getter {
   margin-left: 20px;
   margin-top: 10px;
+  margin-bottom: 10px;
+  margin-right: 20px;
   font-size: 14px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
+}
+
+.ladder-show {
+  font-family: monospace;
+  font-size: 16px;
+  padding-left: 10px;
+}
+
+#ladder-explorer {
+  width: 460px;
+  background-color: #383e49;
 }
 

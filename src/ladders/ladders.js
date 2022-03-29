@@ -100,7 +100,7 @@ class LadderPair extends React.Component {
         return (
             <div className="ladder-pair" onClick={this.props.clickHandler}>
                 <div className="ladder-key">{this.props.ladder.pair} </div>
-                <div className="shortest-path">{this.props.ladder.min_length} </div>
+                <div className="shortest-path">Steps: {this.props.ladder.min_length} </div>
                 <div className="ladder-difficulty">Difficulty: {this.props.ladder.difficulty}</div>
             </div>
         )
@@ -125,7 +125,7 @@ class LadderShow extends React.Component {
             return (<div key={word}>{word}</div>)
         })
         return (
-            <div id={this.state.pair + '-ladder-show'}>{ladderWords}</div>
+            <div id={this.state.pair + '-ladder-show'} class="ladder-show">{ladderWords}</div>
         )
     }
 }
