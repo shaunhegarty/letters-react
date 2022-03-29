@@ -1,7 +1,6 @@
 import React from 'react';
 import axios from 'axios';
 import { WordEntry } from '../letters/lettersgame.js';
-import { consonantsAllowed } from '../letters/letters.js';
 
 class LadderExplorer extends React.Component {
     constructor(props) {
@@ -19,7 +18,6 @@ class LadderExplorer extends React.Component {
         const response = await axios.get('http://shaunhegarty.com/api/ladders/' + this.state.difficulty + '/' + this.state.length)
         let ladders = response.data['ladders']
         this.setState({ 'ladders': ladders })
-        console.log(ladders)
     }
 
     handleFilterChange = (e) => {
@@ -56,7 +54,6 @@ class SimpleLadderDisplay extends React.Component {
             return ladderList.filter(ladder => ladder.pair.includes(query))
         }
         const filteredLadders = filterFunc(this.props.ladders, this.props.filter)
-        console.log(filteredLadders)
         const ladders = filteredLadders.map(function (ladder, index) {
             return (<LadderDisplayUnit key={ladder.pair} ladder={ladder} />)
         })
@@ -76,7 +73,6 @@ class LadderDisplayUnit extends React.Component {
     }
 
     toggleShowLadder = async() =>  {
-        console.log(this.state.displayLadder)
         if (!this.state.chain) {
             const response = await axios.get('http://shaunhegarty.com/api/ladders/' + this.props.ladder.pair)
             let chain = response.data['ladder']
