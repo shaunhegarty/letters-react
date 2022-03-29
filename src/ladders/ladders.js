@@ -6,21 +6,35 @@ class LadderExplorer extends React.Component {
         super(props);
         this.state = {
             length: 3,
+            difficulty: 1,
             validWords: [],
             ladders: [],
         }
     }
 
     handleGetLadders = async () => {
-        const response = await axios.get('http://shaunhegarty.com/api/ladders/1/' + this.state.length)
+        const response = await axios.get('http://shaunhegarty.com/api/ladders/' + this.state.difficulty + '/' + this.state.length)
         let ladders = response.data['ladders']
         this.setState({ 'ladders': ladders })
         console.log(ladders)
     }
 
+    ladderWordLengthHandler(select) {
+        this.setState({'length': select.target.value})
+    }
+
+    
+    ladderDifficultyHandler(select) {
+        this.setState({'difficulty': select.target.value})
+    }
+
     render() {
         return (<div id="ladder-explorer">
-            <GetLadderButton getLadderHandler={(e) => this.handleGetLadders(e)} />
+            <GetLadderButton 
+                getLadderHandler={(e) => this.handleGetLadders(e)} 
+                ladderWordLengthHandler={(e) => this.ladderWordLengthHandler(e)}
+                ladderDifficultyHandler={(e) => this.ladderDifficultyHandler(e)}
+            />
             <SimpleLadderDisplay ladders={this.state.ladders} />
         </div>)
     }
@@ -119,13 +133,39 @@ class LadderShow extends React.Component {
 class GetLadderButton extends React.Component {
     render() {
         return (
-            <button
-                id="get-ladder-button"
-                className="get-ladder-button"
-                onClick={this.props.getLadderHandler}
-            >
-                Get Ladders
-            </button>)
+            <div id="get-ladder" class="ladder-getter">
+                <div id="get-ladder-button-container">
+                    <button
+                        id="get-ladder-button"
+                        className="get-ladder-button"
+                        onClick={this.props.getLadderHandler}>
+                        Get Ladders
+                    </button>
+                </div>
+                <div id="word-length-container">
+                <label for="word-length">Length: </label>
+                    <select id="ladder-word-length" name="word-length" onChange={this.props.ladderWordLengthHandler}>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+                <div id="difficulty-container">
+                    <label for="ladder-difficulty">Difficulty: </label>
+                    <select id="ladder-difficulty" name="ladder-difficulty" onChange={this.props.ladderDifficultyHandler}>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                </div>
+            </div>)
     }
 }
 

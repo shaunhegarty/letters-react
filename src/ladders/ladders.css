@@ -6,3 +6,11 @@
   margin: 1px;
 }
 
+.ladder-getter {
+  margin-left: 20px;
+  margin-top: 10px;
+  font-size: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
