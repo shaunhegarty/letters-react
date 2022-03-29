@@ -37,6 +37,7 @@ class ApiProbe extends React.Component {
           disabled={false}
           word={this.state.currentWord}
           showBackspace={false}
+          showSaveButton={true}
           buttonText='Search'
           changeHandler={this.handleWordChange}
           saveHandler={(e) => this.handleGetResults(e)}

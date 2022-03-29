@@ -373,6 +373,7 @@ class LettersGame extends React.Component {
                         maxLength={this.state.gameSize}
                         disabled={wordEntryDisabled}
                         word={this.state.currentWord}
+                        showSaveButton={true}
                         changeHandler={this.handleWordChange}
                         backspaceHandler={(e) => this.handleBackspaceClick(e)} />
                     <div id="words-panel">
