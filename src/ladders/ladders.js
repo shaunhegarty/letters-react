@@ -1,5 +1,7 @@
 import React from 'react';
 import axios from 'axios';
+import { WordEntry } from '../letters/lettersgame.js';
+import { consonantsAllowed } from '../letters/letters.js';
 
 class LadderExplorer extends React.Component {
     constructor(props) {
@@ -9,6 +11,7 @@ class LadderExplorer extends React.Component {
             difficulty: 1,
             validWords: [],
             ladders: [],
+            filter: "",
         }
     }
 
@@ -17,6 +20,11 @@ class LadderExplorer extends React.Component {
         let ladders = response.data['ladders']
         this.setState({ 'ladders': ladders })
         console.log(ladders)
+    }
+
+    handleFilterChange = (e) => {
+        const word = e.target.value.toLowerCase();
+        this.setState({ filter: word})
     }
 
     ladderWordLengthHandler(select) {
@@ -34,15 +42,22 @@ class LadderExplorer extends React.Component {
                 getLadderHandler={(e) => this.handleGetLadders(e)} 
                 ladderWordLengthHandler={(e) => this.ladderWordLengthHandler(e)}
                 ladderDifficultyHandler={(e) => this.ladderDifficultyHandler(e)}
+                ladderFilterChangeHandler={(e) => this.handleFilterChange(e)}
+                currentFilter={this.state.filter}
             />
-            <SimpleLadderDisplay ladders={this.state.ladders} />
+            <SimpleLadderDisplay ladders={this.state.ladders} filter={this.state.filter} />
         </div>)
     }
 }
 
 class SimpleLadderDisplay extends React.Component {
     render() {
-        const ladders = this.props.ladders.map(function (ladder, index) {
+        function filterFunc(ladderList, query) {
+            return ladderList.filter(ladder => ladder.pair.includes(query))
+        }
+        const filteredLadders = filterFunc(this.props.ladders, this.props.filter)
+        console.log(filteredLadders)
+        const ladders = filteredLadders.map(function (ladder, index) {
             return (<LadderDisplayUnit key={ladder.pair} ladder={ladder} />)
         })
         return (<div id="ladder-display">{ladders}</div>)
@@ -133,39 +148,49 @@ class LadderShow extends React.Component {
 class GetLadderButton extends React.Component {
     render() {
         return (
-            <div id="get-ladder" class="ladder-getter">
-                <div id="get-ladder-button-container">
-                    <button
-                        id="get-ladder-button"
-                        className="get-ladder-button"
-                        onClick={this.props.getLadderHandler}>
-                        Get Ladders
-                    </button>
+            <div>
+                <div id="get-ladder" className="ladder-getter">
+                    <div id="get-ladder-button-container">
+                        <button
+                            id="get-ladder-button"
+                            className="get-ladder-button"
+                            onClick={this.props.getLadderHandler}>
+                            Get Ladders
+                        </button>
+                    </div>
+                    <div id="word-length-container">
+                    <label htmlFor="word-length">Length: </label>
+                        <select id="ladder-word-length" name="word-length" onChange={this.props.ladderWordLengthHandler}>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                    </div>
+                    <div id="difficulty-container">
+                        <label htmlFor="ladder-difficulty">Difficulty: </label>
+                        <select id="ladder-difficulty" name="ladder-difficulty" onChange={this.props.ladderDifficultyHandler}>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                        </select>
+                    </div>
                 </div>
-                <div id="word-length-container">
-                <label for="word-length">Length: </label>
-                    <select id="ladder-word-length" name="word-length" onChange={this.props.ladderWordLengthHandler}>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                    </select>
-                </div>
-                <div id="difficulty-container">
-                    <label for="ladder-difficulty">Difficulty: </label>
-                    <select id="ladder-difficulty" name="ladder-difficulty" onChange={this.props.ladderDifficultyHandler}>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                    </select>
-                </div>
-            </div>)
+                <WordEntry
+                        maxLength={15}
+                        disabled={false}
+                        word={this.props.currentFilter}
+                        showBackspace={false}
+                        showSaveButton={false}
+                        changeHandler={this.props.ladderFilterChangeHandler}
+                    />
+                    </div>)
     }
 }
 

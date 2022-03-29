@@ -61,15 +61,25 @@ class WordEntry extends React.Component {
     }
 
     render() {
-        let backspaceButton = (<button
-            id="backspace"
-            className="game-button"
-            onClick={this.props.backspaceHandler}
-            disabled={this.props.word.length === 0}>
-            {'<'}
-        </button>);
-        if (!this.props.showBackspace) {
-            backspaceButton = null;
+        let backspaceButton;
+        if ( this.props.showBackspace ) {
+            backspaceButton = (<button
+                id="backspace"
+                className="game-button"
+                onClick={this.props.backspaceHandler}
+                disabled={this.props.word.length === 0}>
+                {'<'}
+            </button>);
+        }
+
+        let saveButton;
+        if ( this.props.showSaveButton ) {
+            saveButton = (
+                <button id="save-word"
+                        className="game-button"
+                        onClick={this.props.saveHandler}
+                        disabled={this.props.disabled}>{this.props.buttonText}</button>
+            );
         }
 
         return (
@@ -82,10 +92,7 @@ class WordEntry extends React.Component {
                     onKeyPress={(e) => this.keyPressed(e)}
                 />
                 {backspaceButton}
-                <button id="save-word"
-                    className="game-button"
-                    onClick={this.props.saveHandler}
-                    disabled={this.props.disabled}>{this.props.buttonText}</button>
+                {saveButton}
             </div>)
     }
 }
