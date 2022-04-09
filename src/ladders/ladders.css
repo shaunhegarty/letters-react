@@ -24,8 +24,24 @@
   padding-left: 10px;
 }
 
+.filter-multi-select {
+  max-height: 30px;
+  margin: 3px;
+}
+
 #ladder-explorer {
   width: 480px;
   background-color: #383e49;
 }
 
+#ladder-filters {
+  display: flex;
+}
+
+#ladder-filters > div {
+  margin: 5px;
+}
+
+.ladder-filter-text {
+  margin: 5px;
+}

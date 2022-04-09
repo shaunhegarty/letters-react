@@ -1,47 +1,59 @@
 import React from 'react';
 import axios from 'axios';
+import 'primereact/resources/themes/saga-blue/theme.css';
+import 'primereact/resources/primereact.min.css'
 import { WordEntry } from '../letters/lettersgame.js';
+import { MultiSelect } from 'primereact/multiselect';
 
 class LadderExplorer extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            length: 3,
-            difficulty: 1,
+            length: [],
+            difficulty: [],
             validWords: [],
+            resultLimit: 100,
             ladders: [],
             filter: "",
         }
     }
 
     handleGetLadders = async () => {
-        const response = await axios.get('http://shaunhegarty.com/api/ladders/' + this.state.difficulty + '/' + this.state.length)
-        let ladders = response.data['ladders']
+        const filters = {
+            length: this.state.length,
+            difficulty: this.state.difficulty,
+            ladder_filter: this.state.filter,
+            page_size: this.state.resultLimit
+        }
+        const response = await axios.post('http://shaunhegarty.com/api/ladders/search/', filters)
+        const ladders = response.data['ladders']
         this.setState({ 'ladders': ladders })
     }
 
     handleFilterChange = (e) => {
         const word = e.target.value.toLowerCase();
-        this.setState({ filter: word})
+        this.setState({ filter: word })
     }
 
-    ladderWordLengthHandler(select) {
-        this.setState({'length': select.target.value})
+    ladderWordLengthHandler(value) {
+        console.log(value)
+        this.setState({ 'length': value })
     }
 
-    
-    ladderDifficultyHandler(select) {
-        this.setState({'difficulty': select.target.value})
+    ladderDifficultyHandler(value) {
+        this.setState({ 'difficulty': value })
     }
 
     render() {
         return (<div id="ladder-explorer">
-            <GetLadderButton 
-                getLadderHandler={(e) => this.handleGetLadders(e)} 
+            <GetLadderButton
+                getLadderHandler={(e) => this.handleGetLadders(e)}
+                selectedLengths={this.state.length}
                 ladderWordLengthHandler={(e) => this.ladderWordLengthHandler(e)}
+                selectedDifficulties={this.state.difficulty}
                 ladderDifficultyHandler={(e) => this.ladderDifficultyHandler(e)}
-                ladderFilterChangeHandler={(e) => this.handleFilterChange(e)}
                 currentFilter={this.state.filter}
+                ladderFilterChangeHandler={(e) => this.handleFilterChange(e)}
             />
             <SimpleLadderDisplay ladders={this.state.ladders} filter={this.state.filter} />
         </div>)
@@ -72,31 +84,31 @@ class LadderDisplayUnit extends React.Component {
         }
     }
 
-    toggleShowLadder = async() =>  {
+    toggleShowLadder = async () => {
         if (!this.state.chain) {
             const response = await axios.get('http://shaunhegarty.com/api/ladders/' + this.props.ladder.pair)
             let chain = response.data['ladder']
-            this.setState({'chain': chain})
+            this.setState({ 'chain': chain })
         }
         this.state.displayLadder ? this.collapse() : this.showLadder();
     }
 
     showGame() {
-        this.setState({'displayLadder': false, 'displayGame': true})
+        this.setState({ 'displayLadder': false, 'displayGame': true })
     }
 
     showLadder() {
-        this.setState({'displayLadder': true, 'displayGame': false})
+        this.setState({ 'displayLadder': true, 'displayGame': false })
     }
 
     collapse() {
-        this.setState({'displayLadder': false, 'displayGame': false})
+        this.setState({ 'displayLadder': false, 'displayGame': false })
     }
 
     render() {
         let expansion;
         if (this.state.displayLadder) {
-            expansion = (<LadderShow ladder={this.state.chain}/>)
+            expansion = (<LadderShow ladder={this.state.chain} />)
         }
         return (<div id='single-display'>
             <LadderPair ladder={this.props.ladder} clickHandler={() => this.toggleShowLadder()}></LadderPair>
@@ -136,7 +148,52 @@ class LadderShow extends React.Component {
             return (<div key={word}>{word}</div>)
         })
         return (
-            <div id={this.state.pair + '-ladder-show'} class="ladder-show">{ladderWords}</div>
+            <div id={this.state.pair + '-ladder-show'} className="ladder-show">{ladderWords}</div>
+        )
+    }
+}
+
+class GetLadderFilters extends React.Component {
+    render() {
+        const difficulties = [...Array(10).keys()];
+        const word_lengths = [3, 4, 5, 6]
+        const difficulty_options = difficulties.map(d => {
+            d = (d + 1).toString()
+            return { label: d, value: d }
+        })
+        const length_options = word_lengths.map(w => {
+            w = w.toString()
+            return { label: w, value: w }
+        })
+        return (
+            <div id="ladder-filters">
+                <div id="word-length-container">
+                    <div>Difficulty</div>
+                    <MultiSelect
+                        placeholder='Lower numbers are easier'
+                        label="Difficulty"
+                        value={this.props.selectedDifficulties}
+                        options={difficulty_options}
+                        className="filter-multi-select"
+                        onChange={(e) => this.props.ladderDifficultyHandler(e.value)}
+                        showSelectAll={false}
+                        display='chip'
+                    />
+                </div>
+                <div id="difficulty-container">
+                    <div>Word Length</div>
+                    <MultiSelect
+                        placeholder='Range from 3 to 6'
+                        label="Word Length"
+                        value={this.props.selectedLengths}
+                        options={length_options}
+                        className="filter-multi-select"
+                        onChange={(e) => this.props.ladderWordLengthHandler(e.value)}
+                        showSelectAll={false}
+                        display='chip'
+                    />
+                </div>
+            </div>
         )
     }
 }
@@ -149,36 +206,16 @@ class GetLadderButton extends React.Component {
                     <div id="get-ladder-button-container">
                         <button
                             id="get-ladder-button"
-                            className="get-ladder-button"
+                            className="game-button"
                             onClick={this.props.getLadderHandler}>
                             Get Ladders
                         </button>
                     </div>
-                    <div id="word-length-container">
-                    <label htmlFor="word-length">Length: </label>
-                        <select id="ladder-word-length" name="word-length" onChange={this.props.ladderWordLengthHandler}>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                        </select>
-                    </div>
-                    <div id="difficulty-container">
-                        <label htmlFor="ladder-difficulty">Difficulty: </label>
-                        <select id="ladder-difficulty" name="ladder-difficulty" onChange={this.props.ladderDifficultyHandler}>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                        </select>
-                    </div>
+
                 </div>
-                <WordEntry
+                <div className="ladder-filter-text">
+                    <div>Filter Ladders</div>
+                    <WordEntry
                         maxLength={15}
                         disabled={false}
                         word={this.props.currentFilter}
@@ -186,7 +223,17 @@ class GetLadderButton extends React.Component {
                         showSaveButton={false}
                         changeHandler={this.props.ladderFilterChangeHandler}
                     />
-                    </div>)
+                </div>
+
+                <GetLadderFilters
+                    word={this.props.currentFilter}
+                    selectedDifficulties={this.props.selectedDifficulties}
+                    selectedLengths={this.props.selectedLengths}
+                    filterChangeHandler={this.props.ladderFilterChangeHandler}
+                    ladderDifficultyHandler={this.props.ladderDifficultyHandler}
+                    ladderWordLengthHandler={this.props.ladderWordLengthHandler}
+                />
+            </div>)
     }
 }
 
