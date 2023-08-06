@@ -13,5 +13,5 @@ services:
             - NODE_ENV=production
         command: ["nginx", "-g", "daemon off;"] 
         ports:
-            - "3001:80"
+            - "127.0.0.1:3001:80"
         
