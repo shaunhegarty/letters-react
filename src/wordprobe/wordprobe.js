@@ -18,7 +18,7 @@ class ApiProbe extends React.Component {
   handleGetResults = async () => {
     let subAnagrams;
     if (this.state.currentWord.length) {
-      const response = await axios.get('http://shaunhegarty.com/api/subanagrams/' + this.state.currentWord);
+      const response = await axios.get(process.env.REACT_APP_API_URL + 'subanagrams/' + this.state.currentWord);
       subAnagrams = response.data;
       console.log(response.data)
     } else {

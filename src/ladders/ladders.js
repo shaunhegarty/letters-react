@@ -25,7 +25,7 @@ class LadderExplorer extends React.Component {
             ladder_filter: this.state.filter,
             page_size: this.state.resultLimit
         }
-        const response = await axios.post('http://shaunhegarty.com/api/ladders/search/', filters)
+        const response = await axios.post(process.env.REACT_APP_API_URL + '/ladders/search/', filters)
         const ladders = response.data['ladders']
         this.setState({ 'ladders': ladders })
     }
@@ -86,7 +86,7 @@ class LadderDisplayUnit extends React.Component {
 
     toggleShowLadder = async () => {
         if (!this.state.chain) {
-            const response = await axios.get('http://shaunhegarty.com/api/ladders/' + this.props.ladder.pair)
+            const response = await axios.get(process.env.REACT_APP_API_URL + 'ladders/' + this.props.ladder.pair)
             let chain = response.data['ladder']
             this.setState({ 'chain': chain })
         }

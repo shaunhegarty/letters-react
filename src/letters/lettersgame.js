@@ -5,6 +5,7 @@ import {
 } from './letters.js';
 import axios from 'axios';
 
+
 class Letter extends React.Component {
     render() {
         const letter = this.props.letter;
@@ -230,7 +231,7 @@ class LettersGame extends React.Component {
     handleGetResults = async () => {
         let subAnagrams;
         if (this.state.mix.length) {
-            const response = await axios.get('http://shaunhegarty.com/api/subanagrams/' + this.state.mix);
+            const response = await axios.get(process.env.REACT_APP_API_URL + 'subanagrams/' + this.state.mix);
             subAnagrams = processResults(response.data);
         } else {
             subAnagrams = [];
